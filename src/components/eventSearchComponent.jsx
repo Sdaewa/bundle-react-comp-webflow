@@ -124,19 +124,20 @@ const EventGenre = styled.div`
 `;
 
 const EventSearchComponent = () => {
-  // State to hold genres as an array of objects
   const [genres, setGenres] = useState([]);
 
   useEffect(() => {
-    // Fetch genres from the API and set them into state
     const fetchGenres = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/genres");
+        const response = await fetch(
+          "https://webflow-server-lohdb.ondigitalocean.app/api/genres"
+        );
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
-        setGenres(data); // Update to directly use the fetched data array
+        console.log(data);
+        setGenres(data);
       } catch (error) {
         console.error("There was a problem with the fetch operation:", error);
       }
@@ -148,16 +149,34 @@ const EventSearchComponent = () => {
   return (
     <main>
       <SearchHeader>
-        {/* UI components for date selection and search input */}
+        <DateSelector>Select date</DateSelector>
+        <Dropdown>Select one...</Dropdown>
+        <SearchInput placeholder="Search by venue or event name" />
         <GenreFilter>Filter by genre</GenreFilter>
         <GenresList>
           {genres.map((genre) => (
-            <Genre key={genre.slug}>{genre.name}</Genre> // Use genre.name for display
+            <Genre key={genre.slug}>{genre.name}</Genre>
           ))}
         </GenresList>
-        {/* Results summary and event list components */}
+        <ResultsSummary>
+          <span>1</span> results
+        </ResultsSummary>
       </SearchHeader>
-      <EventList>{/* Placeholder for event list rendering */}</EventList>
+      <EventList>
+        <EventCard>
+          <Image src="#" />
+          <EventInfo>
+            <EventDate>Saturday, March 30, 2024</EventDate>
+            <EventLocation>Berghain | Panorama Bar</EventLocation>
+            <EventName>Oster Klubnacht</EventName>
+          </EventInfo>
+          <EventGenres>
+            {["Techno", "Electro", "House"].map((genre) => (
+              <EventGenre key={genre}>{genre}</EventGenre>
+            ))}
+          </EventGenres>
+        </EventCard>
+      </EventList>
     </main>
   );
 };
