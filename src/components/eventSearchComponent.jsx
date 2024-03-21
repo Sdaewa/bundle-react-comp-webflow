@@ -1,6 +1,42 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 
+const Pagination = ({ eventsPerPage, totalEvents, paginate }) => {
+  const pageNumbers = [];
+
+  for (let i = 1; i <= Math.ceil(totalEvents / eventsPerPage); i++) {
+    pageNumbers.push(i);
+  }
+
+  return (
+    <nav>
+      <ul
+        style={{
+          listStyle: "none",
+          display: "flex",
+          justifyContent: "center",
+          padding: 0,
+        }}>
+        {pageNumbers.map((number) => (
+          <li key={number} style={{ margin: "0 10px" }}>
+            <button
+              onClick={() => paginate(number)}
+              style={{
+                border: "none",
+                background: "none",
+                cursor: "pointer",
+                fontWeight: "bold",
+                fontSize: "16px",
+              }}>
+              {number}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+};
+
 const SearchHeader = styled.header`
   display: flex;
   flex-direction: column;
@@ -123,28 +159,79 @@ const EventGenre = styled.div`
   font-family: Roboto, sans-serif;
 `;
 
+const allowedGenres = [
+  "Techno",
+  "Drum & Bass",
+  "Hard Techno",
+  "Afrobeats",
+  "House",
+  "Deep House",
+  "Downtempo",
+  "Tech House",
+  "New/Synth Wave",
+  "Progressive House",
+  "Trance",
+  "Experimental",
+  "Disco",
+  "Hip Hop",
+  "Ambient",
+  "Garage",
+];
+
 const EventSearchComponent = () => {
-  const [genres, setGenres] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [eventsPerPage] = useState(10);
+  const [selectedGenre, setSelectedGenre] = useState("");
 
   useEffect(() => {
-    const fetchGenres = async () => {
+    const fetchEvents = async () => {
       try {
         const response = await fetch(
-          "https://webflow-server-lohdb.ondigitalocean.app/api/genres"
+          "https://webflow-server-lohdb.ondigitalocean.app/api/events"
         );
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
+        if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();
+
+        setEvents(data);
         console.log(data);
-        setGenres(data);
+        setFilteredEvents(data);
       } catch (error) {
         console.error("There was a problem with the fetch operation:", error);
       }
     };
 
-    fetchGenres();
+    fetchEvents();
   }, []);
+
+  useEffect(() => {
+    if (selectedGenre) {
+      setFilteredEvents(
+        events.filter((event) => {
+          if (event.genres) {
+            const genresArray = event.genres
+              .split(";")
+              .map((genre) => genre.trim().toLowerCase());
+            return genresArray.includes(selectedGenre.toLowerCase());
+          }
+          return false;
+        })
+      );
+    } else {
+      setFilteredEvents(events); // Reset to show all events when no genre is selected
+    }
+    setCurrentPage(1); // Resets pagination to the first page after filtering
+  }, [selectedGenre, events]);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  const indexOfLastEvent = currentPage * eventsPerPage;
+  const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
+  const currentEvents = filteredEvents.slice(
+    indexOfFirstEvent,
+    indexOfLastEvent
+  );
 
   return (
     <main>
@@ -153,30 +240,48 @@ const EventSearchComponent = () => {
         <Dropdown>Select one...</Dropdown>
         <SearchInput placeholder="Search by venue or event name" />
         <GenreFilter>Filter by genre</GenreFilter>
-        <GenresList>
-          {genres.map((genre) => (
-            <Genre key={genre.slug}>{genre.name}</Genre>
-          ))}
-        </GenresList>
-        <ResultsSummary>
-          <span>1</span> results
-        </ResultsSummary>
       </SearchHeader>
+      <GenresList>
+        {allowedGenres.map((genre) => (
+          <Genre
+            key={genre}
+            onClick={() => setSelectedGenre(genre)}
+            style={{
+              backgroundColor: selectedGenre === genre ? "#00BFFF" : "#fff",
+            }}>
+            {genre}
+          </Genre>
+        ))}
+        <Genre onClick={() => setSelectedGenre("")}>Show All</Genre>
+      </GenresList>
+
       <EventList>
-        <EventCard>
-          <Image src="#" />
-          <EventInfo>
-            <EventDate>Saturday, March 30, 2024</EventDate>
-            <EventLocation>Berghain | Panorama Bar</EventLocation>
-            <EventName>Oster Klubnacht</EventName>
-          </EventInfo>
-          <EventGenres>
-            {["Techno", "Electro", "House"].map((genre) => (
-              <EventGenre key={genre}>{genre}</EventGenre>
-            ))}
-          </EventGenres>
-        </EventCard>
+        {currentEvents.map((event) => (
+          <EventCard key={event.id}>
+            <Image src={event.image} alt={event.name} />
+            <EventInfo>
+              <EventDate>{event.start_date_time}</EventDate>
+              <EventLocation>{event.venue}</EventLocation>
+              <EventName>{event.name}</EventName>
+              <EventGenres>
+                {event.genres &&
+                  event.genres
+                    .split(";")
+                    .filter((genre) => genre.trim() !== "")
+                    .map((genre, index) => (
+                      <EventGenre key={index}>{genre}</EventGenre>
+                    ))}
+              </EventGenres>
+            </EventInfo>
+          </EventCard>
+        ))}
       </EventList>
+
+      <Pagination
+        eventsPerPage={eventsPerPage}
+        totalEvents={events.length}
+        paginate={paginate}
+      />
     </main>
   );
 };
