@@ -195,7 +195,6 @@ const EventSearchComponent = () => {
         const data = await response.json();
 
         setEvents(data);
-        console.log(data);
         setFilteredEvents(data);
       } catch (error) {
         console.error("There was a problem with the fetch operation:", error);
