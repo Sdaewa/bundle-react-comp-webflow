@@ -1,42 +1,6 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 
-const Pagination = ({ eventsPerPage, totalEvents, paginate }) => {
-  const pageNumbers = [];
-
-  for (let i = 1; i <= Math.ceil(totalEvents / eventsPerPage); i++) {
-    pageNumbers.push(i);
-  }
-
-  return (
-    <nav>
-      <ul
-        style={{
-          listStyle: "none",
-          display: "flex",
-          justifyContent: "center",
-          padding: 0,
-        }}>
-        {pageNumbers.map((number) => (
-          <li key={number} style={{ margin: "0 10px" }}>
-            <button
-              onClick={() => paginate(number)}
-              style={{
-                border: "none",
-                background: "none",
-                cursor: "pointer",
-                fontWeight: "bold",
-                fontSize: "16px",
-              }}>
-              {number}
-            </button>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  );
-};
-
 const SearchHeader = styled.header`
   display: flex;
   flex-direction: column;
@@ -79,9 +43,10 @@ const GenresList = styled.div`
   flex-wrap: wrap;
   gap: 5px;
   margin-top: 7px;
+  margin-bottom: 25px;
 `;
 
-const Genre = styled.div`
+const GenreBubble = styled.div`
   border-radius: 128px;
   border: 2px solid rgba(64, 224, 208, 1);
   background-color: #fff;
@@ -89,77 +54,73 @@ const Genre = styled.div`
   font-family: Roboto, sans-serif;
 `;
 
-const ResultsSummary = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 20px;
-  font-family: Roboto, sans-serif;
-`;
-
-const EventList = styled.section`
-  display: flex;
-  flex-direction: column;
-  margin-top: 15px;
-`;
-
-const EventCard = styled.article`
-  border-radius: 14px;
+const EventCardWrapper = styled.div`
   background-color: #2e2e2e;
+  border-radius: 14px;
   display: flex;
   flex-direction: column;
-  align-items: start;
-  padding: 10px;
+  padding: 20px;
   margin-bottom: 10px;
+  align-items: start;
 `;
 
-const Image = styled.img`
+const EventImage = styled.img`
   width: 90px;
   height: 90px;
   object-fit: cover;
   border-radius: 10px;
-  margin-right: 10px;
+  margin-right: 20px;
 `;
 
-const EventInfo = styled.div`
+const EventDetails = styled.div`
   display: flex;
   flex-direction: column;
-  margin-left: 10px;
+  flex-grow: 1;
 `;
 
-const EventDate = styled.div`
-  font-weight: 700;
+const EventDate = styled.time`
   font-family: Roboto, sans-serif;
+  font-weight: 700;
+  color: #ffff;
 `;
 
-const EventLocation = styled.div`
+const EventVenue = styled.p`
   color: #08c4d5;
-  margin-top: 12px;
+  margin-top: 6px;
   font-weight: 500;
   font-size: 18px;
   font-family: Roboto, sans-serif;
 `;
 
-const EventName = styled.div`
-  margin-top: 12px;
+const EventTitle = styled.p`
+  margin-top: 6px;
   font-weight: 300;
   font-family: Roboto, sans-serif;
+  color: #ffff;
 `;
 
 const EventGenres = styled.div`
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 10px;
+  font-weight: 300;
 `;
 
-const EventGenre = styled.div`
+const Genre = styled.span`
   border-radius: 10px;
   background-color: #08c4d5;
   padding: 5px 10px;
   font-family: Roboto, sans-serif;
 `;
 
-const allowedGenres = [
+const Container = styled.div`
+  max-width: 50%;
+  margin: 0 auto;
+  padding: 20px;
+`;
+
+const genresFilter = [
   "Techno",
   "Drum & Bass",
   "Hard Techno",
@@ -178,12 +139,81 @@ const allowedGenres = [
   "Garage",
 ];
 
+const Pagination = ({ eventsPerPage, totalEvents, paginate }) => {
+  const pageNumbers = [];
+
+  for (let i = 1; i <= Math.ceil(totalEvents / eventsPerPage); i++) {
+    pageNumbers.push(i);
+  }
+
+  return (
+    <nav>
+      <ul
+        style={{
+          listStyle: "none",
+          display: "flex",
+          justifyContent: "center",
+          padding: 0,
+        }}>
+        {pageNumbers.map((number) => (
+          <li key={number} style={{ margin: "0 10px" }}>
+            <button
+              onClick={() => paginate(number)}
+              style={{
+                border: "none",
+                background: "none",
+                cursor: "pointer",
+                fontWeight: "bold",
+                fontSize: "16px",
+              }}>
+              {number}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+};
+
+const EventCard = ({ event }) => {
+  const formattedDate = new Date(event.start_date_time).toLocaleDateString(
+    "en-US",
+    {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }
+  );
+
+  return (
+    <EventCardWrapper>
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <EventImage src={event.image} alt={event.name} />
+        <EventDetails>
+          <EventDate>{formattedDate}</EventDate>
+          <EventVenue>{event.venue}</EventVenue>
+          <EventTitle>{event.name}</EventTitle>
+        </EventDetails>
+      </div>
+      <EventGenres>
+        {event.genres &&
+          event.genres
+            .split(";")
+            .filter((genre) => genre.trim() !== "")
+            .map((genre, index) => <Genre key={index}>{genre}</Genre>)}
+      </EventGenres>
+    </EventCardWrapper>
+  );
+};
+
 const EventSearchComponent = () => {
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [eventsPerPage] = useState(10);
   const [selectedGenre, setSelectedGenre] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -200,28 +230,33 @@ const EventSearchComponent = () => {
         console.error("There was a problem with the fetch operation:", error);
       }
     };
-
     fetchEvents();
   }, []);
 
   useEffect(() => {
+    let result = events;
+
     if (selectedGenre) {
-      setFilteredEvents(
-        events.filter((event) => {
-          if (event.genres) {
-            const genresArray = event.genres
-              .split(";")
-              .map((genre) => genre.trim().toLowerCase());
-            return genresArray.includes(selectedGenre.toLowerCase());
-          }
-          return false;
-        })
-      );
-    } else {
-      setFilteredEvents(events); // Reset to show all events when no genre is selected
+      result = result.filter((event) => {
+        if (!event.genres) return false;
+        const genresArray = event.genres
+          .split(";")
+          .map((genre) => genre.trim().toLowerCase());
+        return genresArray.includes(selectedGenre.toLowerCase());
+      });
     }
-    setCurrentPage(1); // Resets pagination to the first page after filtering
-  }, [selectedGenre, events]);
+
+    if (searchQuery) {
+      result = result.filter(
+        (event) =>
+          event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          event.venue.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    setFilteredEvents(result);
+    setCurrentPage(1);
+  }, [selectedGenre, searchQuery, events]);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -233,55 +268,41 @@ const EventSearchComponent = () => {
   );
 
   return (
-    <main>
+    <Container>
       <SearchHeader>
         <DateSelector>Select date</DateSelector>
         <Dropdown>Select one...</Dropdown>
-        <SearchInput placeholder="Search by venue or event name" />
+        <SearchInput
+          placeholder="Search by venue or event name"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
         <GenreFilter>Filter by genre</GenreFilter>
       </SearchHeader>
       <GenresList>
-        {allowedGenres.map((genre) => (
-          <Genre
+        {genresFilter.map((genre) => (
+          <GenreBubble
             key={genre}
             onClick={() => setSelectedGenre(genre)}
             style={{
               backgroundColor: selectedGenre === genre ? "#00BFFF" : "#fff",
             }}>
             {genre}
-          </Genre>
+          </GenreBubble>
         ))}
         <Genre onClick={() => setSelectedGenre("")}>Show All</Genre>
       </GenresList>
 
-      <EventList>
-        {currentEvents.map((event) => (
-          <EventCard key={event.id}>
-            <Image src={event.image} alt={event.name} />
-            <EventInfo>
-              <EventDate>{event.start_date_time}</EventDate>
-              <EventLocation>{event.venue}</EventLocation>
-              <EventName>{event.name}</EventName>
-              <EventGenres>
-                {event.genres &&
-                  event.genres
-                    .split(";")
-                    .filter((genre) => genre.trim() !== "")
-                    .map((genre, index) => (
-                      <EventGenre key={index}>{genre}</EventGenre>
-                    ))}
-              </EventGenres>
-            </EventInfo>
-          </EventCard>
-        ))}
-      </EventList>
+      {currentEvents.map((event) => (
+        <EventCard key={event.id} event={event} />
+      ))}
 
       <Pagination
         eventsPerPage={eventsPerPage}
         totalEvents={events.length}
         paginate={paginate}
       />
-    </main>
+    </Container>
   );
 };
 
