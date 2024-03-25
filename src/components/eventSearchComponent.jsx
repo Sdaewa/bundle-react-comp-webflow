@@ -52,6 +52,7 @@ const GenreBubble = styled.div`
   background-color: #fff;
   padding: 7px 10px;
   font-family: Roboto, sans-serif;
+  cursor: pointer; /* Added pointer cursor */
 `;
 
 const EventCardWrapper = styled.div`
@@ -62,6 +63,7 @@ const EventCardWrapper = styled.div`
   padding: 20px;
   margin-bottom: 10px;
   align-items: start;
+  cursor: pointer; /* Added pointer cursor */
 `;
 
 const EventImage = styled.img`
@@ -216,8 +218,18 @@ const EventSearchComponent = () => {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [eventsPerPage] = useState(10);
-  const [selectedGenre, setSelectedGenre] = useState("");
+  const [selectedGenres, setSelectedGenres] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const toggleGenreSelection = (genre) => {
+    if (selectedGenres.includes(genre)) {
+      setSelectedGenres(
+        selectedGenres.filter((selectedGenre) => selectedGenre !== genre)
+      );
+    } else {
+      setSelectedGenres([...selectedGenres, genre]);
+    }
+  };
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -240,13 +252,14 @@ const EventSearchComponent = () => {
   useEffect(() => {
     let result = events;
 
-    if (selectedGenre) {
+    if (selectedGenres.length > 0) {
       result = result.filter((event) => {
-        if (!event.genres) return false;
-        const genresArray = event.genres
-          .split(";")
-          .map((genre) => genre.trim().toLowerCase());
-        return genresArray.includes(selectedGenre.toLowerCase());
+        const eventGenres = event.genres
+          ? event.genres.split(";").map((genre) => genre.trim().toLowerCase())
+          : [];
+        return selectedGenres.some((genre) =>
+          eventGenres.includes(genre.toLowerCase())
+        );
       });
     }
 
@@ -260,7 +273,7 @@ const EventSearchComponent = () => {
 
     setFilteredEvents(result);
     setCurrentPage(1);
-  }, [selectedGenre, searchQuery, events]);
+  }, [selectedGenres, searchQuery, events]);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -287,14 +300,15 @@ const EventSearchComponent = () => {
         {genresFilter.map((genre) => (
           <GenreBubble
             key={genre}
-            onClick={() => setSelectedGenre(genre)}
+            onClick={() => toggleGenreSelection(genre)}
             style={{
-              backgroundColor: selectedGenre === genre ? "#00BFFF" : "#fff",
+              backgroundColor: selectedGenres.includes(genre)
+                ? "#00BFFF"
+                : "#fff",
             }}>
             {genre}
           </GenreBubble>
         ))}
-        <Genre onClick={() => setSelectedGenre("")}>Show All</Genre>
       </GenresList>
 
       {currentEvents.map((event) => (
