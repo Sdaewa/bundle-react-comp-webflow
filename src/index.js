@@ -1,11 +1,14 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import EventSearchComponent from "./components/eventSearchComponent";
+import EventDetailsComponent from "./components/eventDetailsComponent";
 
 const App = () => (
   <>
     <EventSearchComponent />
+    {/* <EventDetailsComponent /> */}
   </>
 );
 
-ReactDOM.render(<App />, document.getElementById("root"));
+const root = createRoot(document.getElementById("root"));
+root.render(<App />);

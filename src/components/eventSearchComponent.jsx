@@ -186,8 +186,12 @@ const EventCard = ({ event }) => {
     }
   );
 
+  const handleRedirect = () => {
+    console.log("click", event);
+  };
+
   return (
-    <EventCardWrapper>
+    <EventCardWrapper onClick={handleRedirect}>
       <div style={{ display: "flex", alignItems: "center" }}>
         <EventImage src={event.image} alt={event.name} />
         <EventDetails>
