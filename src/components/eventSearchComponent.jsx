@@ -189,7 +189,7 @@ const EventCard = ({ event }) => {
   );
 
   const handleRedirect = () => {
-    console.log("click", event);
+    window.location.href = `https://www.findmyvibe.de/event-details?eventId=${event.item_id}`;
   };
 
   return (
